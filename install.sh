@@ -14,18 +14,24 @@ for arg in "$@"; do
 done
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-DEST="$HOME/.claude/statusline"
-SETTINGS="$HOME/.claude/settings.json"
+# Claude Code reads CLAUDE_CONFIG_DIR when it is set; otherwise its config lives in ~/.claude.
+CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+DEST="$CONFIG_DIR/statusline"
+SETTINGS="$CONFIG_DIR/settings.json"
 mkdir -p "$DEST"
 cp "$HERE/statusline.py" "$HERE/statusline_cost.py" "$DEST/"
 
 python3 - "$SETTINGS" "$FORCE" <<'PY'
-import json, os, shutil, sys, tempfile
+import json, os, shlex, shutil, sys, tempfile
 
 path, force = sys.argv[1], sys.argv[2] == "1"
-# $HOME is expanded by the shell Claude Code runs the command in, so this stays correct if the
-# settings file is ever copied to another machine or user.
-command = 'python3 "$HOME/.claude/statusline/statusline.py"'
+# By default $HOME is expanded by the shell Claude Code runs the command in, so this stays correct if
+# the settings file is ever copied to another machine or user. A custom CLAUDE_CONFIG_DIR is written out.
+config_dir = os.environ.get("CLAUDE_CONFIG_DIR")
+if config_dir:
+    command = "python3 " + shlex.quote(os.path.join(config_dir, "statusline", "statusline.py"))
+else:
+    command = 'python3 "$HOME/.claude/statusline/statusline.py"'
 ours = {"type": "command", "command": command}
 
 data = {}

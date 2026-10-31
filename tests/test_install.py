@@ -48,6 +48,17 @@ class Installer(unittest.TestCase):
         self.assertEqual(self.read()["statusLine"], mine)
         self.assertIn("--force", r.stdout)
 
+    def test_honours_claude_config_dir(self):
+        cfg = os.path.join(self.home, "elsewhere")
+        env = dict(os.environ, HOME=self.home, CLAUDE_CONFIG_DIR=cfg)
+        r = subprocess.run(["bash", INSTALL], env=env, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        with open(os.path.join(cfg, "settings.json")) as f:
+            command = json.load(f)["statusLine"]["command"]
+        self.assertEqual(command, "python3 " + os.path.join(cfg, "statusline", "statusline.py"))
+        self.assertTrue(os.path.exists(os.path.join(cfg, "statusline", "statusline_cost.py")))
+        self.assertFalse(os.path.exists(os.path.join(self.home, ".claude")))
+
     def test_force_replaces(self):
         self.write({"statusLine": {"type": "command", "command": "echo hi"}})
         self.assertEqual(self.run_install("--force").returncode, 0)

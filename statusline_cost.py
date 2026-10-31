@@ -4,10 +4,10 @@
 Prints two lines (or nothing):
   Chat ≈$X  Project ≈$Y        this chat incl. its helpers / everything in this project
   7d ≈$Z  avg ≈$W/day          rolling 7 days, this project only (same in every chat of the project)
-Estimates from the token counts in Claude Code's own transcripts (~/.claude/projects), priced at the
+Estimates from the token counts in Claude Code's own transcripts (~/.claude/projects, or $CLAUDE_CONFIG_DIR/projects), priced at the
 Claude API list prices. Not the Max plan bill: what the same work would cost per token.
 
-Per-file cache (path, size, mtime -> per-day, per-model token tallies) in ~/.local/state/claude/cost-cache.json,
+Per-file cache (path, size, mtime -> per-day, per-model token tallies) in ~/.local/state/claude/cost-cache.json ($XDG_STATE_HOME/claude if set),
 so a warm run only reads files that grew. A cold cache is filled by a detached background run (lock file);
 meanwhile only the parts that are fully ready are shown. Any problem: prints nothing.
 
@@ -18,8 +18,12 @@ import json, os, re, subprocess, sys, time
 from datetime import datetime
 
 HOME = os.path.expanduser("~")
-PROJECTS = os.environ.get("CLAUDE_COST_PROJECTS") or os.path.join(HOME, ".claude/projects")  # env overrides are for tests
-STATE = os.environ.get("CLAUDE_COST_STATE") or os.path.join(HOME, ".local/state/claude")
+CONFIG = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(HOME, ".claude")
+XDG_STATE = os.environ.get("XDG_STATE_HOME")
+if not (XDG_STATE and os.path.isabs(XDG_STATE)):  # the XDG spec says a relative value must be ignored
+    XDG_STATE = os.path.join(HOME, ".local/state")
+PROJECTS = os.environ.get("CLAUDE_COST_PROJECTS") or os.path.join(CONFIG, "projects")  # CLAUDE_COST_* are for tests
+STATE = os.environ.get("CLAUDE_COST_STATE") or os.path.join(XDG_STATE, "claude")
 CACHE = os.path.join(STATE, "cost-cache.json")
 LOCK = os.path.join(STATE, "cost-refresh.lock")
 INLINE_BUDGET_S = 0.8     # most the status line itself spends parsing changed files

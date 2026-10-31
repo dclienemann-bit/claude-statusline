@@ -54,9 +54,10 @@ The arrow and weekday (`↻Wed`) is when the weekly window resets. The idea come
 ## The cost box (optional)
 
 Estimates what your work would cost at Claude API list prices, read from the token counts in
-Claude Code's own transcripts under `~/.claude/projects`. It is **not** your subscription bill. It
+Claude Code's own transcripts under `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR/projects` if you
+relocated Claude's config; `install.sh` honours `CLAUDE_CONFIG_DIR` too). It is **not** your subscription bill. It
 shows this chat, this project, the last 7 days and the daily average. The first run builds a cache in
-`~/.local/state/claude/` in the background, so the box appears a few seconds later. Prices live in the
+`~/.local/state/claude/` (or `$XDG_STATE_HOME/claude`) in the background, so the box appears a few seconds later. Prices live in the
 `PRICES` table at the top of `statusline_cost.py`; edit it when prices or models change.
 Turn the box off with `STATUSLINE_COST=0`. Turn colours off with `NO_COLOR=1`.
 
