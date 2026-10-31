@@ -20,7 +20,7 @@ CONTEXT ████░░░░░░░░░░░░░░░░ 18.4%
 ## Install
 
 ```bash
-git clone https://github.com/<you>/claude-statusline
+git clone https://github.com/dclienemann-bit/claude-statusline
 cd claude-statusline
 ./install.sh
 ```
