@@ -14,7 +14,7 @@ meanwhile only the parts that are fully ready are shown. Any problem: prints not
 usage: statusline-cost.py <session_id> <project_dir>
        statusline-cost.py --refresh        (background fill, used by itself)
 """
-import json, os, re, subprocess, sys, time
+import json, os, re, subprocess, sys, time, traceback
 from datetime import datetime
 
 HOME = os.path.expanduser("~")
@@ -277,7 +277,23 @@ def build(session_id, project_dir):
     return [("  ").join(l) for l in (l1, l2) if l]
 
 
+def debug_log():
+    """Only when STATUSLINE_DEBUG is set: record the error (this module's own output is otherwise dropped)."""
+    if os.environ.get("STATUSLINE_DEBUG") in (None, "", "0"):
+        return
+    try:
+        tb = traceback.format_exc()
+        sys.stderr.write(tb)
+        os.makedirs(STATE, exist_ok=True)
+        with open(os.path.join(STATE, "statusline-debug.log"), "a", encoding="utf-8") as f:
+            f.write(f"--- {time.strftime('%Y-%m-%d %H:%M:%S')} statusline_cost.py\n{tb}")
+    except Exception:
+        pass
+
+
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     if len(sys.argv) >= 2 and sys.argv[1] == "--refresh":
         refresh()
         return
@@ -293,4 +309,4 @@ if __name__ == "__main__":
     try:
         main()
     except BaseException:
-        pass
+        debug_log()

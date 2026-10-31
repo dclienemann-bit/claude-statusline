@@ -60,6 +60,8 @@ shows this chat, this project, the last 7 days and the daily average. The first 
 `~/.local/state/claude/` (or `$XDG_STATE_HOME/claude`) in the background, so the box appears a few seconds later. Prices live in the
 `PRICES` table at the top of `statusline_cost.py`; edit it when prices or models change.
 Turn the box off with `STATUSLINE_COST=0`. Turn colours off with `NO_COLOR=1`.
+If the line ever goes blank, set `STATUSLINE_DEBUG=1`: the error is printed to stderr (see it with
+`claude --debug`) and appended to `statusline-debug.log` next to the cost cache.
 
 ## Test
 
