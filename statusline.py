@@ -10,6 +10,8 @@ Claude Code pipes a JSON blob to this script on every refresh. We print up to fo
 
 Rows with no data are left out. Any error prints nothing rather than garbage.
 Set NO_COLOR=1 to turn colours off. Set STATUSLINE_COST=0 to turn the cost box off.
+Set STATUSLINE_DEBUG=1 to find out why the line is blank: the error goes to stderr (visible with
+`claude --debug`) and to statusline-debug.log in the state directory (~/.local/state/claude).
 """
 import json
 import os
@@ -17,6 +19,7 @@ import re
 import subprocess
 import sys
 import time
+import traceback
 
 WEEK_H = 168.0
 COLOR = "NO_COLOR" not in os.environ
@@ -35,6 +38,25 @@ ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
 def plain(s):
     return ANSI.sub("", s)
+
+
+def debug_log():
+    """Only when STATUSLINE_DEBUG is set: say what went wrong, since the line itself stays blank."""
+    if os.environ.get("STATUSLINE_DEBUG") in (None, "", "0"):
+        return
+    try:
+        tb = traceback.format_exc()
+        sys.stderr.write(tb)
+        xdg = os.environ.get("XDG_STATE_HOME")
+        base = xdg if xdg and os.path.isabs(xdg) else os.path.join(os.path.expanduser("~"), ".local/state")
+        state = os.environ.get("CLAUDE_COST_STATE") or os.path.join(base, "claude")
+        log = os.path.join(state, "statusline-debug.log")
+        os.makedirs(state, exist_ok=True)
+        too_big = os.path.exists(log) and os.path.getsize(log) > 200000
+        with open(log, "w" if too_big else "a", encoding="utf-8") as f:
+            f.write(f"--- {time.strftime('%Y-%m-%d %H:%M:%S')} statusline.py\n{tb}")
+    except Exception:
+        pass
 
 
 def heat(pct):
@@ -73,6 +95,7 @@ def git_branch(cwd):
                              capture_output=True, text=True, timeout=1).stdout.strip()
         return out or None
     except Exception:
+        debug_log()
         return None
 
 
@@ -141,18 +164,21 @@ def cost_box(d):
         if not sid or not proj:
             return []
         out = subprocess.run([sys.executable, "-I", os.path.join(here, "statusline_cost.py"), sid, proj],
-                             capture_output=True, text=True, timeout=3).stdout
+                             capture_output=True, encoding="utf-8", errors="replace", timeout=3).stdout
         return [l for l in out.split("\n") if l.strip()]
     except Exception:
+        debug_log()
         return []
 
 
 def main():
     try:
-        d = json.load(sys.stdin)
+        if hasattr(sys.stdout, "reconfigure"):  # the bars and arrows are not ASCII; do not depend on the locale
+            sys.stdout.reconfigure(encoding="utf-8")
+        d = json.loads(sys.stdin.buffer.read().decode("utf-8", "replace"))
         sys.stdout.write(build(d))
     except Exception:
-        pass
+        debug_log()
 
 
 if __name__ == "__main__":

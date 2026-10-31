@@ -26,14 +26,16 @@ cd claude-statusline
 ```
 
 The installer copies two files into `~/.claude/statusline/`, saves a backup of your
-`settings.json`, and sets the `statusLine` command. Restart Claude Code. To see it with made-up
-numbers first, run `python3 demo.py`.
+`settings.json` (the first backup is kept, so re-running never overwrites your original), and sets the
+`statusLine` command. If you already have a different `statusLine`, it leaves it alone and tells you;
+run `./install.sh --force` to replace it. Restart Claude Code. To see it with made-up numbers first,
+run `python3 demo.py`.
 
 Manual install: copy `statusline.py` (and `statusline_cost.py` if you want the cost box) somewhere,
 then add this to `~/.claude/settings.json`:
 
 ```json
-{ "statusLine": { "type": "command", "command": "python3 /path/to/statusline.py" } }
+{ "statusLine": { "type": "command", "command": "python3 \"$HOME/path/to/statusline.py\"" } }
 ```
 
 ## What "banked" means
@@ -52,16 +54,19 @@ The arrow and weekday (`↻Wed`) is when the weekly window resets. The idea come
 ## The cost box (optional)
 
 Estimates what your work would cost at Claude API list prices, read from the token counts in
-Claude Code's own transcripts under `~/.claude/projects`. It is **not** your subscription bill. It
+Claude Code's own transcripts under `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR/projects` if you
+relocated Claude's config; `install.sh` honours `CLAUDE_CONFIG_DIR` too). It is **not** your subscription bill. It
 shows this chat, this project, the last 7 days and the daily average. The first run builds a cache in
-`~/.local/state/claude/` in the background, so the box appears a few seconds later. Prices live in the
+`~/.local/state/claude/` (or `$XDG_STATE_HOME/claude`) in the background, so the box appears a few seconds later. Prices live in the
 `PRICES` table at the top of `statusline_cost.py`; edit it when prices or models change.
 Turn the box off with `STATUSLINE_COST=0`. Turn colours off with `NO_COLOR=1`.
+If the line ever goes blank, set `STATUSLINE_DEBUG=1`: the error is printed to stderr (see it with
+`claude --debug`) and appended to `statusline-debug.log` next to the cost cache.
 
 ## Test
 
 ```bash
-python3 tests/test_statusline.py
+python3 -m unittest discover -s tests
 ```
 
 ## Notes
