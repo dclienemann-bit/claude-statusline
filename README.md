@@ -26,14 +26,16 @@ cd claude-statusline
 ```
 
 The installer copies two files into `~/.claude/statusline/`, saves a backup of your
-`settings.json`, and sets the `statusLine` command. Restart Claude Code. To see it with made-up
-numbers first, run `python3 demo.py`.
+`settings.json` (the first backup is kept, so re-running never overwrites your original), and sets the
+`statusLine` command. If you already have a different `statusLine`, it leaves it alone and tells you;
+run `./install.sh --force` to replace it. Restart Claude Code. To see it with made-up numbers first,
+run `python3 demo.py`.
 
 Manual install: copy `statusline.py` (and `statusline_cost.py` if you want the cost box) somewhere,
 then add this to `~/.claude/settings.json`:
 
 ```json
-{ "statusLine": { "type": "command", "command": "python3 /path/to/statusline.py" } }
+{ "statusLine": { "type": "command", "command": "python3 \"$HOME/path/to/statusline.py\"" } }
 ```
 
 ## What "banked" means
@@ -61,7 +63,7 @@ Turn the box off with `STATUSLINE_COST=0`. Turn colours off with `NO_COLOR=1`.
 ## Test
 
 ```bash
-python3 tests/test_statusline.py
+python3 -m unittest discover -s tests
 ```
 
 ## Notes
